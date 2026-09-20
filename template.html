@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Google Dork Vault — __TOTAL__ payload</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121924; --panel-2:#0e141d; --line:#1f2a38;
+    --txt:#e6edf6; --muted:#8b9bb0; --acc:#4ade80; --acc-2:#38bdf8;
+    --warn:#fbbf24; --star:#facc15; --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -200px,#152033,transparent),var(--bg);
+    color:var(--txt); font:15px/1.5 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  a{color:inherit}
+  header{
+    position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+    background:rgba(11,15,20,.86); border-bottom:1px solid var(--line);
+  }
+  .head-in{max-width:1080px; margin:0 auto; padding:14px 16px 10px}
+  .title{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  h1{margin:0; font-size:19px; letter-spacing:.2px}
+  h1 span{color:var(--acc)}
+  .meta{color:var(--muted); font-size:12.5px}
+  .controls{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+  .fld{position:relative; flex:1 1 300px; min-width:220px}
+  .fld label{
+    position:absolute; top:-8px; left:10px; padding:0 6px; font-size:11px; letter-spacing:.4px;
+    text-transform:uppercase; color:var(--muted); background:var(--bg); border-radius:4px;
+  }
+  input[type=text]{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); color:var(--txt); font-size:14px; outline:none;
+  }
+  input[type=text]:focus{border-color:var(--acc-2); box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+  #target{border-color:#2b3a4d}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:8px}
+  .hint b{color:var(--warn); font-weight:600}
+  .hint code,.meta code{background:#16202c; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:12px}
+  .tabs{display:flex; gap:6px; margin:12px 0 0; flex-wrap:wrap}
+  .tabs button{
+    background:var(--panel); color:var(--muted); border:1px solid var(--line); cursor:pointer;
+    padding:7px 12px; border-radius:999px; font-size:13px; display:flex; align-items:center; gap:7px;
+  }
+  .tabs button b{color:var(--txt); font-weight:600; font-size:12px; opacity:.85}
+  .tabs button:hover{color:var(--txt); border-color:#2c3b4f}
+  .tabs button.active{background:#16283a; color:var(--txt); border-color:var(--acc-2)}
+  main{max-width:1080px; margin:0 auto; padding:16px 16px 80px}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap}
+  .status{color:var(--muted); font-size:13px}
+  .danger{
+    background:transparent; border:1px solid #4a2530; color:#ff8f9d; cursor:pointer;
+    padding:6px 11px; border-radius:8px; font-size:12.5px;
+  }
+  .danger:hover{background:#2a1620}
+  .row{
+    display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line);
+    border-radius:var(--radius); background:linear-gradient(180deg,var(--panel),var(--panel-2)); margin-bottom:8px;
+  }
+  .row .num{color:var(--muted); font-size:11.5px; min-width:42px; padding-top:5px; font-variant-numeric:tabular-nums}
+  .row .body{flex:1; min-width:0}
+  .code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    font-size:13px; line-height:1.55; word-break:break-word; white-space:pre-wrap; cursor:copy;
+  }
+  .code:hover{color:#fff}
+  mark{background:rgba(74,222,128,.18); color:var(--acc); border-radius:4px; padding:0 3px}
+  .badge{
+    display:inline-block; margin-top:7px; font-size:11px; letter-spacing:.3px; text-transform:uppercase;
+    color:var(--warn); background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.28);
+    padding:2px 7px; border-radius:999px;
+  }
+  .acts{display:flex; gap:6px; align-items:center; flex-shrink:0}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+    border-radius:9px; border:1px solid var(--line); background:#16202c; color:var(--txt);
+    font-size:13px; padding:7px 12px; text-decoration:none; white-space:nowrap;
+  }
+  .btn:hover{border-color:#31435a; background:#1b2735}
+  .btn.open{background:linear-gradient(180deg,#1f7a4d,#176b41); border-color:#22935c; font-weight:600}
+  .btn.open:hover{background:linear-gradient(180deg,#25915b,#1a7a4a)}
+  .btn.icon{padding:7px 9px; font-size:14px; line-height:1}
+  .btn.icon.on{color:var(--star); border-color:rgba(250,204,21,.45); background:rgba(250,204,21,.08)}
+  .empty{color:var(--muted); text-align:center; padding:48px 16px; border:1px dashed var(--line); border-radius:var(--radius)}
+  .more{display:block; margin:18px auto; background:var(--panel); color:var(--txt); border:1px solid var(--line);
+        padding:10px 18px; border-radius:10px; cursor:pointer; font-size:13.5px}
+  .more:hover{border-color:var(--acc-2)}
+  .hist-time{color:var(--muted); font-size:11.5px; margin-top:6px}
+  #toast{
+    position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px); opacity:0; pointer-events:none;
+    background:#16283a; border:1px solid var(--acc-2); color:var(--txt); padding:10px 16px; border-radius:10px;
+    font-size:13.5px; transition:.18s ease; z-index:50; max-width:90vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+  footer{max-width:1080px; margin:0 auto; padding:0 16px 40px; color:var(--muted); font-size:12px}
+  @media (max-width:640px){
+    .row{flex-wrap:wrap} .acts{width:100%; justify-content:flex-end}
+    .row .num{min-width:30px} h1{font-size:17px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-in">
+    <div class="title">
+      <h1>Google <span>Dork</span> Vault</h1>
+      <div class="meta"><b id="m-total">__TOTAL__</b> payload • <b id="m-target">__WITH_TARGET__</b> pakai <code>site:</code> • build __BUILD_DATE__</div>
+    </div>
+
+    <div class="controls">
+      <div class="fld">
+        <label for="target">Target (domain)</label>
+        <input type="text" id="target" autocomplete="off" spellcheck="false" placeholder="contoh: contoh.com  —  kosongkan untuk pakai payload asli">
+      </div>
+      <div class="fld">
+        <label for="q">Cari payload</label>
+        <input type="text" id="q" autocomplete="off" spellcheck="false" placeholder="inurl:admin  /  filetype:sql  /  password">
+      </div>
+    </div>
+
+    <div class="hint" id="hint"></div>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="all" class="active">Semua <b id="c-all">0</b></button>
+      <button data-tab="target">Butuh Target <b id="c-target">0</b></button>
+      <button data-tab="bm">Bookmark <b id="c-bm">0</b></button>
+      <button data-tab="hist">Riwayat <b id="c-hist">0</b></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="status" id="status">Memuat…</div>
+    <button class="danger" id="clear" hidden></button>
+  </div>
+  <div id="list"></div>
+  <div id="sentinel"></div>
+</main>
+
+<footer>
+  Payload diambil dari <b>google_Dorks.txt</b> (13.750+ Google Dorks oleh Jolanda de Koff / BullsEye0).
+  Gunakan hanya untuk pengujian yang legal dan atas izin pemilik sistem.
+</footer>
+
+<div id="toast"></div>
+
+<script>
+const DORKS = /*__DORKS__*/[];
+const PAGE = 60;
+const LS = { target: 'gdv_target', bm: 'gdv_bookmarks', hist: 'gdv_history', tab: 'gdv_tab' };
+
+const els = {
+  target: document.getElementById('target'),
+  q: document.getElementById('q'),
+  hint: document.getElementById('hint'),
+  tabs: document.getElementById('tabs'),
+  list: document.getElementById('list'),
+  sentinel: document.getElementById('sentinel'),
+  status: document.getElementById('status'),
+  clear: document.getElementById('clear'),
+  toast: document.getElementById('toast'),
+  cAll: document.getElementById('c-all'),
+  cTarget: document.getElementById('c-target'),
+  cBm: document.getElementById('c-bm'),
+  cHist: document.getElementById('c-hist')
+};
+
+const state = {
+  tab: 'all',
+  query: '',
+  target: '',
+  books: new Set(),
+  hist: [],
+  list: [],
+  shown: 0
+};
+
+/* ---------- localStorage ---------- */
+function loadStore() {
+  try {
+    state.target = localStorage.getItem(LS.target) || '';
+    state.books = new Set(JSON.parse(localStorage.getItem(LS.bm) || '[]'));
+    state.hist = JSON.parse(localStorage.getItem(LS.hist) || '[]');
+    const tab = localStorage.getItem(LS.tab);
+    if (['all', 'target', 'bm', 'hist'].includes(tab)) state.tab = tab;
+  } catch (e) { /* storage bisa saja diblokir; jalan tanpa persistensi */ }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); } catch (e) {}
+}
+
+/* ---------- helper target & payload ---------- */
+function needsTarget(d) { return /(^|[^a-z])site:/i.test(d); }
+
+function cleanTarget(t) {
+  return t.trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^\/\//, '')
+    .split(/[\s/?#]+/)[0] || '';
+}
+/** Ganti apa pun setelah `site:` dengan target user. */
+function resolve(d) {
+  if (!state.target) return d;
+  return d.replace(/site:\S*/gi, 'site:' + state.target);
+}
+function googleUrl(d) {
+  return 'https://www.google.com/search?q=' + encodeURIComponent(d);
+}
+function toast(msg) {
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => els.toast.classList.remove('show'), 1800);
+}
+function fmtTime(ts) {
+  return new Date(ts).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+/* ---------- list & rendering ---------- */
+function currentList() {
+  let base;
+  if (state.tab === 'bm') base = DORKS.filter(d => state.books.has(d));
+  else if (state.tab === 'target') base = DORKS.filter(needsTarget);
+  else if (state.tab === 'hist') base = state.hist;
+  else base = DORKS;
+
+  const terms = state.query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length && state.tab !== 'hist') {
+    base = base.filter(d => {
+      const low = d.toLowerCase();
+      return terms.every(t => low.includes(t));
+    });
+  }
+  return base;
+}
+
+function payloadNode(d) {
+  const el = document.createElement('div');
+  el.className = 'code';
+  el.title = 'Klik untuk menyalin payload';
+  const text = resolve(d);
+  if (!state.target) { el.textContent = text; return el; }
+
+  const re = /site:\S*/gi;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const mk = document.createElement('mark');
+    mk.textContent = m[0];
+    el.appendChild(mk);
+    last = m.index + m[0].length;
+    if (m[0] === '') re.lastIndex++;
+  }
+  el.appendChild(document.createTextNode(text.slice(last)));
+  return el;
+}
+
+function copyText(text, note) {
+  const done = () => toast(note || 'Payload disalin');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('Gagal menyalin'); }
+  ta.remove();
+}
+
+function pushHistory(d) {
+  const entry = { d, r: resolve(d), t: state.target, ts: Date.now() };
+  state.hist = state.hist.filter(h => !(h.d === entry.d && h.t === entry.t));
+  state.hist.unshift(entry);
+  if (state.hist.length > 300) state.hist.length = 300;
+  save(LS.hist, state.hist);
+  updateCounts();
+}
+
+function dorkRow(d, i) {
+  const row = document.createElement('article');
+  row.className = 'row';
+  row.dataset.i = String(i);
+
+  const num = document.createElement('span');
+  num.className = 'num';
+  num.textContent = '#' + (i + 1);
+
+  const body = document.createElement('div');
+  body.className = 'body';
+  const code = payloadNode(d);
+  code.addEventListener('click', () => copyText(resolve(d)));
+  body.appendChild(code);
+  if (needsTarget(d)) {
+    const b = document.createElement('span');
+    b.className = 'badge';
+    b.textContent = state.target ? 'site: → ' + state.target : 'butuh target';
+    body.appendChild(b);
+  }
+
+  const acts = document.createElement('div');
+  acts.className = 'acts';
+
+  const open = document.createElement('a');
+  open.className = 'btn open';
+  open.target = '_blank';
+  open.rel = 'noopener noreferrer';
+  open.textContent = 'Open';
+  open.href = googleUrl(resolve(d));
+  open.addEventListener('click', () => pushHistory(d));
+
+  const copy = document.createElement('button');
+  copy.className = 'btn icon';
+  copy.type = 'button';
+  copy.title = 'Salin payload';
+  copy.textContent = '⧉';
+  copy.addEventListener('click', () => copyText(resolve(d)));
+
+  const star = document.createElement('button');
+  star.className = 'btn icon' + (state.books.has(d) ? ' on' : '');
+  star.type = 'button';
+  star.title = 'Bookmark';
+  star.textContent = '★';
+  star.addEventListener('click', () => {
+    if (state.books.has(d)) state.books.delete(d);
+    else state.books.add(d);
+    save(LS.bm, [...state.books]);
+    star.classList.toggle('on', state.books.has(d));
+    updateCounts();
+    if (state.tab === 'bm') render();
+    else toast(state.books.has(d) ? 'Ditambahkan ke bookmark' : 'Bookmark dihapus');
+  });
+
+  acts.append(open, copy, star);
+  row.append(num, body, acts);
+  return row;
+}
+
+function histRow(h, i) {
+  const row = document.createElement('article');
+  row.className = 'row';
+  row.dataset.i = String(i);
+
+  const num = document.createElement('span');
+  num.className = 'num';
+  num.textContent = '#' + (i + 1);
+
+  const body = document.createElement('div');
+  body.className = 'body';
+  const code = document.createElement('div');
+  code.className = 'code';
+  code.title = 'Klik untuk menyalin payload';
+  code.textContent = h.r;
+  code.addEventListener('click', () => copyText(h.r));
+  const time = document.createElement('div');
+  time.className = 'hist-time';
+  time.textContent = fmtTime(h.ts) + (h.t ? ' • target: ' + h.t : ' • tanpa target');
+  body.append(code, time);
+
+  const acts = document.createElement('div');
+  acts.className = 'acts';
+
+  const open = document.createElement('a');
+  open.className = 'btn open';
+  open.target = '_blank';
+  open.rel = 'noopener noreferrer';
+  open.textContent = 'Open';
+  open.href = googleUrl(h.r);
+  open.addEventListener('click', () => pushHistory(h.d));
+
+  const star = document.createElement('button');
+  star.className = 'btn icon' + (state.books.has(h.d) ? ' on' : '');
+  star.type = 'button';
+  star.title = 'Bookmark';
+  star.textContent = '★';
+  star.addEventListener('click', () => {
+    if (state.books.has(h.d)) state.books.delete(h.d);
+    else state.books.add(h.d);
+    save(LS.bm, [...state.books]);
+    star.classList.toggle('on', state.books.has(h.d));
+    updateCounts();
+  });
+
+  const del = document.createElement('button');
+  del.className = 'btn icon';
+  del.type = 'button';
+  del.title = 'Hapus dari riwayat';
+  del.textContent = '✕';
+  del.addEventListener('click', () => {
+    state.hist = state.hist.filter(x => x !== h);
+    save(LS.hist, state.hist);
+    render();
+  });
+
+  acts.append(open, star, del);
+  row.append(num, body, acts);
+  return row;
+}
+
+function loadMore() {
+  const start = state.shown;
+  const end = Math.min(start + PAGE, state.list.length);
+  if (start >= end) return false;
+  const frag = document.createDocumentFragment();
+  for (let i = start; i < end; i++) {
+    frag.appendChild(state.tab === 'hist' ? histRow(state.list[i], i) : dorkRow(state.list[i], i));
+  }
+  els.list.appendChild(frag);
+  state.shown = end;
+  return end < state.list.length;
+}
+
+function render() {
+  state.list = currentList();
+  els.list.innerHTML = '';
+  state.shown = 0;
+
+  if (!state.list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = state.tab === 'bm'
+      ? 'Belum ada bookmark. Klik ★ pada payload untuk menyimpannya.'
+      : state.tab === 'hist'
+        ? 'Belum ada riwayat. Riwayat terisi otomatis saat kamu menekan Open.'
+        : 'Tidak ada payload yang cocok dengan pencarian.';
+    els.list.appendChild(empty);
+  } else {
+    loadMore();
+  }
+  updateCounts();
+  updateHint();
+  updateClearButton();
+  updateStatus();
+}
+
+function updateStatus() {
+  const total = state.tab === 'hist' ? state.hist.length : state.list.length;
+  const word = state.tab === 'hist' ? 'riwayat' : 'payload';
+  els.status.textContent = total === 0
+    ? 'Tidak ada ' + word + ' untuk ditampilkan'
+    : 'Menampilkan ' + Math.min(state.shown, total) + ' dari ' + total + ' ' + word;
+}
+function updateCounts() {
+  els.cAll.textContent = DORKS.length.toLocaleString('id-ID');
+  els.cTarget.textContent = DORKS.filter(needsTarget).length.toLocaleString('id-ID');
+  els.cBm.textContent = state.books.size.toLocaleString('id-ID');
+  els.cHist.textContent = state.hist.length.toLocaleString('id-ID');
+}
+function codeEl(text) {
+  const c = document.createElement('code');
+  c.textContent = text;
+  return c;
+}
+function updateHint() {
+  const n = DORKS.filter(needsTarget).length.toLocaleString('id-ID');
+  els.hint.textContent = '';
+  if (state.target) {
+    const b = document.createElement('b');
+    b.textContent = 'site:' + state.target;
+    els.hint.append('Setiap ', codeEl('site:'), ' pada payload diganti menjadi ', b,
+      ' (' + n + ' payload terpengaruh).');
+  } else {
+    els.hint.append('Belum ada target — payload dibuka apa adanya. Isi target untuk mengganti bagian ',
+      codeEl('site:'), ' pada ' + n + ' payload.');
+  }
+}
+function updateClearButton() {
+  const show = (state.tab === 'bm' && state.books.size) || (state.tab === 'hist' && state.hist.length);
+  els.clear.hidden = !show;
+  if (show) els.clear.textContent = state.tab === 'bm' ? 'Hapus semua bookmark' : 'Hapus riwayat';
+}
+
+/* Perbarui payload yang sudah tampil saat target berubah (tanpa kehilangan posisi scroll). */
+function refreshPayloads() {
+  state.list = currentList();
+  if (state.tab === 'hist') { render(); return; }
+  els.list.querySelectorAll('.row').forEach(row => {
+    const i = Number(row.dataset.i);
+    const d = state.list[i];
+    if (d === undefined) return;
+    const body = row.querySelector('.body');
+    const code = body.querySelector('.code');
+    const fresh = payloadNode(d);
+    body.replaceChild(fresh, code);
+    const badge = body.querySelector('.badge');
+    if (badge) badge.textContent = state.target ? 'site: → ' + state.target : 'butuh target';
+    const open = row.querySelector('a.open');
+    if (open) open.href = googleUrl(resolve(d));
+  });
+  updateHint();
+  updateCounts();
+}
+
+/* ---------- events ---------- */
+let qTimer, tTimer;
+els.q.addEventListener('input', () => {
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => {
+    state.query = els.q.value.trim();
+    render();
+    window.scrollTo({ top: 0 });
+  }, 140);
+});
+
+els.target.addEventListener('input', () => {
+  clearTimeout(tTimer);
+  tTimer = setTimeout(() => {
+    state.target = cleanTarget(els.target.value);
+    save(LS.target, state.target);
+    refreshPayloads();
+  }, 140);
+});
+els.target.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); els.q.focus(); }
+});
+
+els.tabs.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  state.tab = btn.dataset.tab;
+  save(LS.tab, state.tab);
+  els.tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  render();
+  window.scrollTo({ top: 0 });
+});
+
+els.clear.addEventListener('click', () => {
+  if (state.tab === 'bm') { state.books.clear(); save(LS.bm, []); }
+  else { state.hist = []; save(LS.hist, []); }
+  render();
+  toast('Dibersihkan');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== els.q && document.activeElement !== els.target) {
+    e.preventDefault();
+    els.q.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === els.q) {
+    els.q.value = '';
+    state.query = '';
+    render();
+    els.q.blur();
+  }
+});
+
+const io = new IntersectionObserver(entries => {
+  if (!entries.some(en => en.isIntersecting)) return;
+  if (state.shown >= state.list.length) return;
+  if (!loadMore()) return;
+  updateStatus();
+}, { rootMargin: '600px' });
+io.observe(els.sentinel);
+
+/* ---------- init ---------- */
+loadStore();
+els.target.value = state.target;
+els.tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+render();
+</script>
+</body>
+</html>
